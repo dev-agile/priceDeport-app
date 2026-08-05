@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "MADR Checker",
+    "slug": "madr-checker",
+    "icon": "./assets/icons/wholeSeller/Logo.jpg",
+    "jsEngine": "hermes",
+    "version": "1.1.5",
+    "userInterfaceStyle": "light",
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "splash": {
+      "image": "./assets/icons/wholeSeller/Logo.jpg",
+      "backgroundColor": "#AEDC81",
+      "resizeMode": "contain"
+    },
+    "experiments": {
+      "newArchEnabled": true
+    },
+    "android": {
+      "newArchEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/wholeSeller/Logo.jpg",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.madrchecker.app"
+    },
+    "ios": {
+      "newArchEnabled": true,
+      "bundleIdentifier": "org.priceDepot",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          }
+        ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Allow MADR Checker to access your camera to scan product barcodes and QR codes.",
+        "NSPhotoLibraryUsageDescription": "Allow MADR Checker to access your photo library to attach images when sharing product details and reports.",
+        "NSPhotoLibraryAddUsageDescription": "Allow MADR Checker to save generated reports and shared images to your photo library.",
+        "NSMicrophoneUsageDescription": "Allow MADR Checker to access your microphone for in-app video recording features.",
+        "NSDocumentsFolderUsageDescription": "Allow MADR Checker to access your documents folder to import MADR price files."
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6e01e053-a911-4d09-ae74-85a366f92b46"
+      }
+    },
+    "owner": "madr.checker"
+  }
+}

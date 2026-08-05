@@ -1,0 +1,15 @@
+export const WholeSellerRoutes = {
+  HOME: "Home",
+  VIEW_DATA: "ViewData",
+  UPLOAD_FILE: "uploadFile",
+  OPTION: "Option",
+  PROFILE: "Profile",
+  EDIT_PROFILE: "EditProfile",
+  SETTING: "Setting",
+  LOGIN: "Login",
+  EMAIL_VERIFICATION: "EmailVerification",
+  CREATE_NEW_ACCOUNT: "CreateNewAccount",
+  RESET_PASSWORD: "resetPassword",
+  TAB_CONTAINER: "tabContainer",
+  Order: "ViewData",
+} as const
