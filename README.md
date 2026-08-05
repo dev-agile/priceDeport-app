@@ -1,77 +1,160 @@
-# Welcome to your new ignited app!
+# madr-checker
 
-> The latest and greatest boilerplate for Infinite Red opinions
+A React Native app built on Expo SDK 54 (RN 0.81, React 19). It ships as a **custom dev client**, not Expo Go — there are too many native modules (MMKV, Reanimated worklets, Sentry, camera, permissions) for Go to load it.
 
-This is the boilerplate that [Infinite Red](https://infinite.red) uses as a way to test bleeding-edge changes to our React Native stack.
+So the first thing a new dev does is build the app once. After that it's just Metro.
 
-- [Quick start documentation](https://github.com/infinitered/ignite/blob/master/docs/boilerplate/Boilerplate.md)
-- [Full documentation](https://github.com/infinitered/ignite/blob/master/docs/README.md)
+---
 
-## Getting Started
+## Prerequisites
+
+| | |
+|---|---|
+| Node | 20 or newer (enforced by `engines`) |
+| Package manager | whatever lockfile is committed — don't mix npm and yarn |
+| Watchman | recommended on macOS |
+| iOS | macOS + Xcode + CocoaPods |
+| Android | Android Studio, JDK 17, an SDK platform + emulator image |
+| EAS CLI | only if you're doing `build:*` (all profiles run `--local`) |
+| Maestro | only if you're running e2e |
+| Graphviz | only if you want `depcruise:graph` (it shells out to `dot`) |
+
+## Getting set up
 
 ```bash
-npm install --legacy-peer-deps
-npm run start
+git clone <repo-url>
+cd madr-checker
+npm install          # postinstall runs patch-package, don't skip it
 ```
 
-To make things work on your local simulator, or on your phone, you need first to [run `eas build`](https://github.com/infinitered/ignite/blob/master/docs/expo/EAS.md). We have many shortcuts on `package.json` to make it easier:
+Then build the dev client once for whichever platform you're on:
 
 ```bash
-npm run build:ios:sim # build for ios simulator
-npm run build:ios:device # build for ios device
-npm run build:ios:prod # build for ios device
+npm run ios          # or
+npm run android
 ```
 
-### `./assets`
+This compiles native code and takes a while the first time — 10–20 minutes is normal, longer on Android. It installs the app on your simulator/emulator and starts Metro.
 
-This directory is designed to organize and store various assets, making it easy for you to manage and use them in your application. The assets are further categorized into subdirectories, including `icons` and `images`:
+From then on:
 
-```tree
-assets
-├── icons
-└── images
+```bash
+npm start            # expo start --dev-client
 ```
 
-**icons**
-This is where your icon assets will live. These icons can be used for buttons, navigation elements, or any other UI components. The recommended format for icons is PNG, but other formats can be used as well.
+Open the installed app, and it connects to Metro. If it doesn't, the dev menu has a "reload"/"change bundler" option.
 
-Ignite comes with a built-in `Icon` component. You can find detailed usage instructions in the [docs](https://github.com/infinitered/ignite/blob/master/docs/boilerplate/app/components/Icon.md).
+> If there's a `.env` or config file the app needs, it isn't documented yet — ask someone on the team. See [TODO](#not-covered-yet).
 
-**images**
-This is where your images will live, such as background images, logos, or any other graphics. You can use various formats such as PNG, JPEG, or GIF for your images.
+## Scripts you'll actually use
 
-Another valuable built-in component within Ignite is the `AutoImage` component. You can find detailed usage instructions in the [docs](https://github.com/infinitered/ignite/blob/master/docs/Components-AutoImage.md).
+```bash
+npm start                # Metro, dev client mode
+npm run ios              # build + run on iOS sim
+npm run android          # build + run on Android emulator
+npm run web              # runs in the browser; native-only modules will misbehave
 
-How to use your `icon` or `image` assets:
+npm run compile          # tsc --noEmit, run this before pushing
+npm run lint             # eslint --fix
+npm run lint:check       # eslint, no writes (this is what CI wants)
+npm test                 # jest
+npm run test:watch
 
-```typescript
-import { Image } from 'react-native';
-
-const MyComponent = () => {
-  return (
-    <Image source={require('assets/images/my_image.png')} />
-  );
-};
+npm run adb              # port-forward Metro + Reactotron to a physical Android device
 ```
 
-## Running Maestro end-to-end tests
+Full list is in `package.json`.
 
-Follow our [Maestro Setup](https://ignitecookbook.com/docs/recipes/MaestroSetup) recipe.
+## Testing
 
-## Next Steps
+Unit and component tests use Jest with `jest-expo` and `@testing-library/react-native`:
 
-### Ignite Cookbook
+```bash
+npm test
+```
 
-[Ignite Cookbook](https://ignitecookbook.com/) is an easy way for developers to browse and share code snippets (or “recipes”) that actually work.
+E2E is Maestro, flows live in `.maestro/flows`:
 
-### Upgrade Ignite boilerplate
+```bash
+npm run test:maestro
+```
 
-Read our [Upgrade Guide](https://ignitecookbook.com/docs/recipes/UpdatingIgnite) to learn how to upgrade your Ignite project.
+That script passes `MAESTRO_APP_ID=com.pizzaapp`. If flows fail instantly with "app not found", check that ID against the bundle identifier in the Expo config and override it if needed.
 
-## Community
+## Code quality
 
-⭐️ Help us out by [starring on GitHub](https://github.com/infinitered/ignite), filing bug reports in [issues](https://github.com/infinitered/ignite/issues) or [ask questions](https://github.com/infinitered/ignite/discussions).
+`npm run compile` and `npm run lint:check` are the two gates. Prettier runs through ESLint, so there's no separate format command — `npm run lint` fixes formatting for you.
 
-💬 Join us on [Slack](https://join.slack.com/t/infiniteredcommunity/shared_invite/zt-1f137np4h-zPTq_CbaRFUOR_glUFs2UA) to discuss.
+There's also dependency-cruiser for import rules:
 
-📰 Make our Editor-in-chief happy by [reading the React Native Newsletter](https://reactnativenewsletter.com/).
+```bash
+npm run depcruise         # validate against .dependency-cruiser.js
+npm run depcruise:graph   # renders app-dependency-graph.svg/.png
+```
+
+Worth running the graph once when you're new, just to see how `app/` hangs together.
+
+## Where things are
+
+Source lives in `app/`, entry point is `index.tsx`. `android/` and `ios/` are real, committed native projects (see the note on prebuild below), and `patches/` holds patch-package diffs applied on install.
+
+Rough map of the stack, so you know which docs to open:
+
+- **Navigation** — React Navigation 7 (native stack + bottom tabs)
+- **Server state** — TanStack Query, with apisauce/axios underneath
+- **Client state** — Redux Toolkit
+- **Storage** — react-native-mmkv
+- **Forms** — react-hook-form + yup via `@hookform/resolvers`
+- **i18n** — i18next / react-i18next, locale from expo-localization
+- **Animation** — Reanimated 4 + react-native-worklets
+- **Monitoring** — Sentry (crashes), PostHog (product analytics)
+- **OTA** — expo-updates, plus expo-in-app-updates for store prompts
+- **Debugging** — Reactotron (run `npm run adb` first on a physical Android device)
+
+Note that Reanimated 4 requires the separate `react-native-worklets` package, and it's pinned — `expo install --fix` is configured to leave it alone. Don't bump it casually.
+
+## Builds
+
+All EAS profiles run locally (`--local`), so you need the native toolchain installed:
+
+```bash
+npm run build:ios:device
+npm run build:android:preview
+# etc — dev / development:device / preview / prod for both platforms
+```
+
+Profiles themselves are defined in `eas.json`.
+
+## When something breaks
+
+**Metro acting strange** — kill it and restart with `npx expo start --clear`.
+
+**Android build failing after a dependency change**
+
+```bash
+npm run android:clean    # nukes .cxx and build dirs
+npm run android
+```
+
+**iOS pods out of sync** — `cd ios && pod install`.
+
+**Dependency versions look wrong** — `npm run align-deps` (`expo install --fix`) pulls everything back to the versions Expo SDK 54 expects.
+
+**Nothing works and you've tried everything**
+
+```bash
+npm run prebuild:clean
+```
+
+Careful with this one. It regenerates `android/` and `ios/` from scratch, so any hand-edited native code that isn't expressed as a config plugin or a patch will be lost. Check `git status` afterwards before committing.
+
+## Not covered yet
+
+Things a new dev will hit that this file can't answer — someone with context should fill these in:
+
+- [ ] Environment variables / secrets and how to get them
+- [ ] API base URLs per environment
+- [ ] Branching and PR conventions
+- [ ] Release process, store credentials, who can ship
+- [ ] Signing keys and provisioning profiles
+- [ ] Sentry / PostHog project access
